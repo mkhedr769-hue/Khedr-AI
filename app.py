@@ -3,7 +3,7 @@ import google.generativeai as genai
 
 # --- 1. المفتاح السحري ---
 # حط مفتاحك الجديد مكان النجوم هنا
-MY_KEY = "AIzaSyAIzaSyAIzaSyDSumcvm-gbqyKhhK47R9LYqzJyEvbTfxg" 
+MY_KEY = "AIzaSyAIzaSyDSumcvm-gbqyKhhK47R9LYqzJyEvbTfxg" 
 
 # محاولة الربط بالمفتاح
 try:
