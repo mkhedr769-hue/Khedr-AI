@@ -1,95 +1,74 @@
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
-from gtts import gTTS
 
-# --- 1. اكتشاف لغة المستخدم تلقائياً ---
-# بنجرب نجيب لغة المتصفح، لو فشلنا بنخليها English كافتراض
-user_lang = st.query_params.get("lang", ["ar"])[0][:2] 
+# --- 1. إعدادات الصفحة واللغة التلقائية ---
+# بيحاول يلقط لغة المتصفح، لو معرفش بيخليها عربي كافتراض
+user_lang = st.query_params.get("lang", ["ar"])[0][:2]
 
-# قاموس اللغات لترجمة الواجهة
-translations = {
-    "ar": {"title": "خضر AI", "sub": "تطوير Argentiny@khedr", "input": "اسأل Khedr AI...", "upload": "ارفع ملف", "options": ["كاميرا", "صور", "ملفات", "مستندات"]},
-    "en": {"title": "Khedr AI", "sub": "Developed by Argentiny@khedr", "input": "Ask Khedr AI...", "upload": "Upload", "options": ["Camera", "Photos", "Files", "Docs"]},
-    "de": {"title": "Khedr AI", "sub": "Entwickelt von Argentiny@khedr", "input": "Fragen Sie Khedr AI...", "upload": "Hochladen", "options": ["Kamera", "Fotos", "Dateien", "Dokumente"]},
-    "fr": {"title": "Khedr AI", "sub": "Développé par Argentiny@khedr", "input": "Demandez à Khedr AI...", "upload": "Télécharger", "options": ["Caméra", "Photos", "Fichiers", "Documents"]}
+texts = {
+    "ar": {"title": "خضر AI", "sub": "تطوير Argentiny@khedr", "input": "اسأل خضر AI أي حاجة...", "side": "➕ الإضافات", "up": "ارفع صورة أو ملف"},
+    "en": {"title": "Khedr AI", "sub": "Developed by Argentiny@khedr", "input": "Ask Khedr AI anything...", "side": "➕ Add-ons", "up": "Upload image or file"},
+    "de": {"title": "Khedr AI", "sub": "Entwickelt von Argentiny@khedr", "input": "Frag Khedr AI etwas...", "side": "➕ Extras", "up": "Bild oder Datei hochladen"}
 }
 
-lang = translations.get(user_lang, translations["en"])
+# اختيار اللغة بناءً على لغة المتصفح أو العربي كافتراض
+content = texts.get(user_lang, texts["ar"])
 
-st.set_page_config(page_title=lang["title"], layout="centered")
+st.set_page_config(page_title=content["title"], page_icon="🤖")
 
-# --- 2. إعدادات المفتاح السري ---
+# --- 2. إدارة المفتاح (API KEY) ---
+# الكود بيدور في الـ Secrets الأول، لو ملقاش بياخد المفتاح اللي هتحطه هنا كاحتياط
 try:
-    API_KEY = st.secrets["GOOGLE_API_KEY"]
-    genai.configure(api_key=API_KEY)
-except:
-    st.error("Missing API Key in Secrets!")
+    API_KEY = st.secrets.get("GOOGLE_API_KEY", "حط_مفتاحك_هنا_بين_العلامات")
+    if API_KEY and API_KEY != "AIzaSyCUkgFQp-XJ_xiZRgZuVXexeSIWZGl2YuE":
+        genai.configure(api_key=API_KEY)
+    else:
+        st.warning("⚠️ محتاجين المفتاح (API Key) عشان نشتغل")
+except Exception as e:
+    st.error("مشكلة في إعدادات المفتاح")
 
-# --- 3. تصميم الواجهة الروشة (CSS) ---
+# --- 3. تصميم الواجهة ---
 st.markdown(f"""
     <style>
     .stApp {{ background-color: #0e1117; color: white; }}
-    /* تصميم منطقة الإدخال لتشبه تطبيقات الشات */
-    .chat-container {{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: #1e1e1e;
-        padding: 10px;
-        border-radius: 30px;
-    }}
-    .plus-btn {{
-        background: #333;
-        color: white;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        font-size: 24px;
-    }}
+    [data-testid="stSidebar"] {{ background-color: #161b22; }}
     </style>
 """, unsafe_allow_html=True)
 
-st.title(f"🤖 {lang['title']}")
-st.caption(lang["sub"])
+st.title(f"🤖 {content['title']}")
+st.caption(content["sub"])
 
-# --- 4. نظام الرفع المتقدم (علامة الزائد) ---
-# بنستخدم الـ Sidebar أو Expander لمحاكاة قائمة الزائد
+# --- 4. علامة الزائد (في القائمة الجانبية) ---
 with st.sidebar:
-    st.markdown("### ➕ " + lang["upload"])
-    choice = st.radio("", lang["options"])
-    
-    if choice:
-        uploaded_file = st.file_uploader(f"Select {choice}", type=["jpg", "png", "pdf", "docx", "mp4"])
+    st.header(content["side"])
+    uploaded_file = st.file_uploader(content["up"], type=["jpg", "png", "jpeg", "pdf", "txt"])
+    if uploaded_file:
+        st.success("✅ تم رفع الملف")
 
 # --- 5. منطقة الدردشة ---
-prompt = st.chat_input(lang["input"])
+prompt = st.chat_input(content["input"])
 
-if prompt or (locals().get('uploaded_file')):
+if prompt:
     with st.chat_message("assistant"):
-        with st.spinner("..."):
-            try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                parts = []
-                if prompt: parts.append(prompt)
-                if locals().get('uploaded_file'):
+        try:
+            # استخدام موديل فلاش السريع
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            inputs = [prompt]
+            if uploaded_file:
+                if uploaded_file.type.startswith("image"):
                     img = Image.open(uploaded_file)
-                    parts.append(img)
-                
-                # إرسال الطلب مع توجيه الذكاء الاصطناعي للرد بنفس لغة المستخدم
-                response = model.generate_content(parts + [f"Reply in the language: {user_lang}"])
-                st.markdown(response.text)
-                
-                # صوت الرد
-                tts = gTTS(text=response.text[:100], lang=user_lang)
-                tts.save("res.mp3")
-                st.audio("res.mp3")
-            except Exception as e:
-                st.error("Error! Check API Key.")
+                    inputs.append(img)
+            
+            # توجيه الموديل للرد بلغة المستخدم
+            inputs.append(f"Please respond in {user_lang} language.")
+            
+            response = model.generate_content(inputs)
+            st.markdown(response.text)
+            
+        except Exception as e:
+            st.error("المفتاح محتاج تحديث، تواصل مع المطور!")
 
-st.write("---")
-st.markdown("<center>All Rights Reserved © Argentiny@khedr</center>", unsafe_allow_html=True)
+# --- 6. التوقيع النهائي ---
+st.markdown("<br><hr><center>All Rights Reserved © Argentiny@khedr</center>", unsafe_allow_html=True)
