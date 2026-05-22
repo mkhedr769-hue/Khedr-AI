@@ -14,7 +14,7 @@ st.set_page_config(
 
 # المحرك السري والبيانات (Gemini API Key الجديد)
 # تم تحديث المفتاح هنا يا أرجنتيني لضمان التشغيل
-API_KEY = "AIzaSyCxV_V5..." # حط المفتاح الجديد هنا أو استخدم اللي هبعتهولك في رسالة منفصلة
+API_KEY = "AIzaSyD7YlyeeAVXTUOOkSLmxBIplrIXYtm5ClE" # حط المفتاح الجديد هنا أو استخدم اللي هبعتهولك في رسالة منفصلة
 genai.configure(api_key=API_KEY)
 MY_PHONE = "201099899711"
 
