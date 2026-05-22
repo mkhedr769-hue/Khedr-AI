@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 
 # حط مفتاحك الجديد هنا
-MY_KEY = "AIzaSy..." 
+MY_KEY = "AIzaSyAIzaSyDi4_5LvrbzqXyiWmkwt5muPElGafreY3M" 
 
 # إعداد الربط
 try:
@@ -37,3 +37,4 @@ if prompt:
 
 st.write("---")
 st.markdown("<center>All Rights Reserved © Argentiny@khedr</center>", unsafe_allow_html=True)
+            
