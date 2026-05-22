@@ -14,8 +14,7 @@ st.set_page_config(
 
 # المحرك السري والبيانات (Gemini API Key الجديد)
 # تم تحديث المفتاح هنا يا أرجنتيني لضمان التشغيل
-API_KEY = "AIzaSyD7YlyeeAVXTUOOkSLmxBIplrIXYtm5ClE" # حط المفتاح الجديد هنا أو استخدم اللي هبعتهولك في رسالة منفصلة
-genai.configure(api_key=API_KEY)
+API_KEY = st.secrets["GOOGLE_API_KEY"]
 MY_PHONE = "201099899711"
 
 if "user_status" not in st.session_state:
