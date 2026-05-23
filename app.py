@@ -1,17 +1,11 @@
 import streamlit as st
 import google.generativeai as genai
 
-# --- 1. المفتاح الجديد ---
-# حط المفتاح اللي صاحبك هيبعتهولك هنا بين علامتين التنصيص
+# --- 1. إعداد المفتاح (تم وضع المفتاح الجديد هنا) ---
 MY_KEY = "AIzaSyC2-3pnFUCNmIk86fE3FWHeMktFS3FcNt8" 
 
-# إعدادات الربط
 try:
-    API_KEY = st.secrets.get("GOOGLE_API_KEY", MY_KEY)
-    if API_KEY and API_KEY != "AIzaSy...":
-        genai.configure(api_key=API_KEY)
-    else:
-        st.warning("⚠️ في انتظار وضع المفتاح الجديد (API Key)")
+    genai.configure(api_key=MY_KEY)
 except:
     st.error("مشكلة في إعدادات الربط")
 
@@ -20,28 +14,29 @@ st.set_page_config(page_title="خضر AI", page_icon="🤖")
 st.title("🤖 خضر AI")
 st.caption("تطوير Argentiny@khedr")
 
-# --- 3. الدردشة والذكاء الاصطناعي ---
+# --- 3. الدردشة الذكية ---
 prompt = st.chat_input("اسأل خضر أي حاجة...")
 
 if prompt:
     with st.chat_message("assistant"):
-        # مصفوفة بأسماء الموديلات عشان لو واحد منفعش التاني يشتغل
-        models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
-        success = False
-        
-        for model_name in models_to_try:
-            try:
-                model = genai.GenerativeModel(model_name)
+        # الكود ده بيدور تلقائياً على الموديل اللي شغال في الحساب
+        try:
+            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            if available_models:
+                # بيختار أول موديل متاح (زي gemini-1.5-flash أو gemini-pro)
+                model = genai.GenerativeModel(available_models[0])
                 response = model.generate_content(prompt)
                 st.write(response.text)
-                success = True
-                break # أول ما يشتغل يخرج من اللفة
-            except:
-                continue # لو فشل يجرب الموديل اللي بعده
-        
-        if not success:
-            st.error("جوجل لسه مش شايفة المفتاح.. تأكد إن المفتاح من حساب جديد وشغال.")
+            else:
+                st.error("جوجل لسه مفعلتش الموديلات على الحساب ده، جرب تبعت رسالة في AI Studio الأول.")
+        except Exception as e:
+            # لو الموديلات التلقائية منفعش، بنجرب الموديل الأساسي كحل أخير
+            try:
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content(prompt)
+                st.write(response.text)
+            except Exception as e2:
+                st.error(f"خطأ من جوجل: {str(e2)}")
 
-# --- 4. التوقيع ---
 st.write("---")
 st.markdown("<center>All Rights Reserved © Argentiny@khedr</center>", unsafe_allow_html=True)
