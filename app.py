@@ -73,4 +73,4 @@ if prompt := st.chat_input("Ask Khedr-AI..."):
                 st.error("جوجل لسه بتحدث في السيرفرات، جرب كمان 5 دقايق.")
 
 st.markdown("<br><hr><center>All Rights Reserved © Argentiny@khedr</center>", unsafe_allow_html=True)
-                    
+            
