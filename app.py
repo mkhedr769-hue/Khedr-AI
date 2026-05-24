@@ -8,74 +8,59 @@ if "GOOGLE_API_KEY" in st.secrets:
 else:
     st.error("⚠️ ضيف المفتاح في Secrets")
 
-st.set_page_config(page_title="Khedr-AI", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Khedr-AI | Official", page_icon="🤖", layout="wide")
 
-# --- 2. ستايل الواجهة (تثبيت الكتابة تحت) ---
+# --- 2. العلامات المائية وحقوق الملكية ---
 st.markdown("""
     <style>
-    .main-title { font-size: 35px; text-align: center; color: #00ffcc; font-weight: bold; margin-bottom: 30px; }
-    /* جعل منطقة الشات تأخذ المساحة المتاحة وتترك الإدخال في الأسفل */
-    .stChatFloatingInputContainer { bottom: 20px; }
+    .main-title { font-size: 40px; text-align: center; color: #00ffcc; font-weight: bold; margin-bottom: 5px; }
+    .watermark { position: fixed; bottom: 80px; right: 20px; opacity: 0.3; font-size: 20px; color: grey; z-index: 100; }
+    .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 12px; color: #555; padding: 10px; }
+    /* ستايل الشات */
+    .stChatFloatingInputContainer { bottom: 40px; }
     </style>
+    <div class="watermark">© Developed by Khedr</div>
+    <div class="footer">جميع الحقوق محفوظة لـ Khedr-AI 2026</div>
 """, unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- 3. القائمة الجانبية (الرفع + الأنظمة) ---
+# --- 3. القائمة الجانبية (الرفع + الأنظمة + الحقوق) ---
 with st.sidebar:
-    st.title("⚙️ إعدادات خضر")
+    st.image("https://via.placeholder.com/150?text=Khedr+AI", caption="Khedr-AI Official")
+    st.title("⚙️ التحكم والحقوق")
+    st.write("---")
     
-    # اختيار النظام - ضفنا 2.5 وكل اللي قلبك يحبه
+    # اختيار النظام
     model_choice = st.selectbox(
-        "اختار نظام التشغيل:",
-        ["Gemini 2.5 Flash (الأحدث)", "Gemini 1.5 Pro", "Gemini 1.5 Flash", "Gemini Pro"]
+        "نظام التشغيل:",
+        ["Gemini 2.5 Flash", "Gemini 1.5 Pro", "Gemini Pro"]
     )
     
     model_map = {
-        "Gemini 2.5 Flash (الأحدث)": "gemini-2.5-flash",
+        "Gemini 2.5 Flash": "gemini-2.5-flash",
         "Gemini 1.5 Pro": "gemini-1.5-pro",
-        "Gemini 1.5 Flash": "gemini-1.5-flash",
         "Gemini Pro": "gemini-pro"
     }
     selected_model = model_map[model_choice]
 
     st.write("---")
-    # مكان الرفع الجديد (بعيد عن الوش)
-    st.markdown("### 📤 رفع الملفات")
-    uploaded_file = st.file_uploader("ارفع صورك هنا يا برنس", type=["jpg", "png", "jpeg"])
+    uploaded_file = st.file_uploader("📤 ارفع ملفاتك (حقوق Khedr محفوظة)", type=["jpg", "png", "jpeg"])
     
     if st.button("🗑️ مسح المحادثة"):
         st.session_state.messages = []
         st.rerun()
 
 st.markdown('<p class="main-title">Khedr-AI</p>', unsafe_allow_html=True)
+st.caption("بوابة الذكاء الاصطناعي الخاصة بـ Khedr")
 
 # عرض الرسائل
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- 4. خانة الكتابة (تحت خالص) ---
+# --- 4. خانة الكتابة ---
 if prompt := st.chat_input("قول يا حب..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        try:
-            model = genai.GenerativeModel(selected_model)
-            personality = "أنت 'خضر AI' صاحب الأرجنتيني. فرفوش ومصري وبتقول يا زميلي. "
-            
-            payload = [personality + prompt]
-            if uploaded_file:
-                img = Image.open(uploaded_file)
-                payload.append(img)
-            
-            response = model.generate_content(payload)
-            st.markdown(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
-            
-        except Exception as e:
-            st.error(f"النظام ده معلق: {e}")
+    st.session_state.messages
     
