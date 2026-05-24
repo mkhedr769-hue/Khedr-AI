@@ -14,7 +14,7 @@ st.set_page_config(page_title="Khedr-AI | Official", page_icon="🤖", layout="w
 st.markdown(f"""
     <style>
     .main-title {{ font-size: 38px; text-align: center; color: #00ffcc; font-weight: bold; margin-bottom: 0px; }}
-    .watermark {{ position: fixed; bottom: 20px; left: 20px; opacity: 0.4; font-size: 18px; color: #00ffcc; z-index: 100; transform: rotate(-15deg); font-family: sans-serif; pointer-events: none; }}
+    .watermark {{ position: fixed; bottom: -100px; left: 20px; opacity: 0.4; font-size: 18px; color: #00ffcc; z-index: 100; transform: rotate(-15deg); font-family: sans-serif; pointer-events: none; }}
     .footer {{ position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 14px; color: #777; padding: 10px; background: rgba(0,0,0,0.5); z-index: 1000; }}
     .stChatFloatingInputContainer {{ bottom: 50px; }}
     </style>
