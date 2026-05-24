@@ -2,67 +2,67 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# --- 1. إعدادات المفتاح ---
+# --- 1. الربط والمفتاح ---
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("⚠️ ناقصك المفتاح في الـ Secrets باسم GOOGLE_API_KEY")
+    st.error("⚠️ ناقصك المفتاح في الـ Secrets!")
 
-st.set_page_config(page_title="Khedr-AI", page_icon="🤖")
+st.set_page_config(page_title="Khedr-AI", page_icon="🤖", layout="centered")
 
-# --- 2. ستايل تظبيط شكل الزائد (+) ---
+# --- 2. ستايل "شات جي بي تي" السري ---
 st.markdown("""
     <style>
-    .main-title { font-size: 35px; text-align: center; color: #00ffcc; font-weight: bold; }
-    .stFileUploader { margin-bottom: -45px; }
+    /* إخفاء النصوص الزائدة في زر الرفع */
+    .stFileUploader section { padding: 0; min-height: 0; border: none; }
+    .stFileUploader label { display: none; }
+    .stFileUploader [data-testid="stFileUploaderFileName"] { display: none; }
+    
+    /* تظبيط المسافات بين الأعمدة */
+    [data-testid="column"] { display: flex; align-items: flex-end; }
+    .main-title { font-size: 30px; text-align: center; color: #00ffcc; font-weight: bold; margin-bottom: 20px; }
     </style>
 """, unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- 3. اختيار النظام من الجنب (ضفنا 2.5 فلاش) ---
+# اختيار المحرك من الجنب (خليته 2.5 كاختيار أول)
 with st.sidebar:
-    st.title("⚙️ غرفة التحكم")
-    model_choice = st.selectbox(
-        "اختار المحرك (النظام):",
-        ["Gemini 2.5 Flash (الأحدث)", "Gemini 1.5 Pro (العبقري)", "Gemini Pro (المستقر)"]
-    )
-    
-    # ربط الاختيارات بالأسماء التقنية
-    model_map = {
-        "Gemini 2.5 Flash (الأحدث)": "gemini-2.5-flash",
-        "Gemini 1.5 Pro (العبقري)": "gemini-1.5-pro",
-        "Gemini Pro (المستقر)": "gemini-pro"
-    }
-    selected_model = model_map[model_choice]
-    
-    if st.button("🗑️ مسح المحادثة"):
+    st.title("⚙️ التحكم")
+    model_id = st.selectbox("النظام:", ["gemini-1.5-flash", "gemini-pro"])
+    if st.button("🗑️ مسح"):
         st.session_state.messages = []
         st.rerun()
 
 st.markdown('<p class="main-title">Khedr-AI</p>', unsafe_allow_html=True)
 
+# عرض الرسائل
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- 4. علامة الزائد (+) للصور ---
-uploaded_file = st.file_uploader("", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
+# --- 3. حركة "الزائد" الاحترافية جنب الإرسال ---
+# بنقسم السطر لعمودين: واحد صغير جداً للزائد والتاني للكتابة
+col1, col2 = st.columns([0.15, 0.85])
 
-# --- 5. منطق الرد (خضر الفرفوش) ---
-if prompt := st.chat_input("قول يا حب..."):
+with col1:
+    # زر الرفع بقى عبارة عن علامة (+) فقط ومكانه جنب الإرسال
+    uploaded_file = st.file_uploader("➕", type=["jpg", "png", "jpeg"], key="plus_btn")
+
+with col2:
+    prompt = st.chat_input("قول يا حب...")
+
+# --- 4. معالجة الرد ---
+if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         try:
-            # تشغيل الموديل اللي اخترته (اللي هو غالباً 2.5 دلوقتي)
-            model = genai.GenerativeModel(selected_model)
-            
-            # السيستم (شخصية خضر)
-            personality = "أنت 'خضر AI' صاحب الأرجنتيني. فرفوش ومصري وبتقول يا زميلي. "
+            model = genai.GenerativeModel(model_id)
+            personality = "أنت 'خضر AI' صاحب الأرجنتيني. فرفوش ومصري. "
             
             payload = [personality + prompt]
             if uploaded_file:
@@ -74,8 +74,5 @@ if prompt := st.chat_input("قول يا حب..."):
             st.session_state.messages.append({"role": "assistant", "content": response.text})
             
         except Exception as e:
-            if "429" in str(e):
-                st.error("جوجل بتقولك الموديل ده جاب جاز النهاردة، غير النظام من الجنب لـ 'المستقر'.")
-            else:
-                st.error(f"حصلت قفلة: {e}")
-                
+            st.error(f"حصلت قفلة: {e}")
+    
