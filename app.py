@@ -33,7 +33,7 @@ with st.sidebar:
     # إضافة نظام 2.0/2.5 كأول خيار
     model_choice = st.selectbox(
         "اختار نظام التشغيل:",
-        ["gemini-2.5-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"]
+        ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"]
     )
     
     st.write("---")
