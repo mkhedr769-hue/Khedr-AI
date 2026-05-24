@@ -2,11 +2,11 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# --- 1. الربط بالمفتاح (الأساس) ---
+# --- 1. الربط بالمفتاح ---
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("⚠️ ضيف المفتاح في Secrets")
+    st.error("⚠️ ضيف المفتاح في Secrets باسم GOOGLE_API_KEY")
 
 st.set_page_config(page_title="Khedr-AI | Official", page_icon="🤖", layout="wide")
 
@@ -14,9 +14,7 @@ st.set_page_config(page_title="Khedr-AI | Official", page_icon="🤖", layout="w
 st.markdown(f"""
     <style>
     .main-title {{ font-size: 38px; text-align: center; color: #00ffcc; font-weight: bold; margin-bottom: 0px; }}
-    /* العلامة المائية العايمة */
-    .watermark {{ position: fixed; bottom: 100px; left: 20px; opacity: 0.4; font-size: 18px; color: #00ffcc; z-index: 100; transform: rotate(-15deg); font-family: sans-serif; }}
-    /* حقوق الملكية تحت خالص */
+    .watermark {{ position: fixed; bottom: 100px; left: 20px; opacity: 0.4; font-size: 18px; color: #00ffcc; z-index: 100; transform: rotate(-15deg); font-family: sans-serif; pointer-events: none; }}
     .footer {{ position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 14px; color: #777; padding: 10px; background: rgba(0,0,0,0.5); z-index: 1000; }}
     .stChatFloatingInputContainer {{ bottom: 50px; }}
     </style>
@@ -27,19 +25,18 @@ st.markdown(f"""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- 3. القائمة الجانبية (شغل البراند) ---
+# --- 3. القائمة الجانبية (التحكم الكامل) ---
 with st.sidebar:
     st.markdown("<h2 style='text-align: center; color: #00ffcc;'>Argentiny@khedr</h2>", unsafe_allow_html=True)
     st.write("---")
     
-    # قائمة الأنظمة (بأسماء سليمة عشان متجيبش 404)
+    # إضافة نظام 2.0/2.5 كأول خيار
     model_choice = st.selectbox(
         "اختار نظام التشغيل:",
-        ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+        ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"]
     )
     
     st.write("---")
-    # الرفع مستخبي في الجنب عشان الوش يفضل نضيف
     uploaded_file = st.file_uploader("📤 ارفع ملفاتك (حقوق Argentiny محفوظة)", type=["jpg", "png", "jpeg"])
     
     if st.button("🗑️ مسح المحادثة"):
@@ -54,7 +51,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- 4. خانة الكتابة (تحت خالص) ---
+# --- 4. خانة الكتابة ---
 if prompt := st.chat_input("قول يا حب..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -62,13 +59,12 @@ if prompt := st.chat_input("قول يا حب..."):
 
     with st.chat_message("assistant"):
         try:
-            # منادي الموديل المختار
             model = genai.GenerativeModel(model_choice)
             
-            # تعليمات "خضر" المختصرة (ممنوع رغي الأرجنتين)
+            # شخصية خضر الزيتونة (بدون رغي الأرجنتين)
             instruction = (
                 "أنت خضر AI، المساعد الذكي الخاص بـ Argentiny@khedr. "
-                "ردك مصري، جدع، ومختصر جداً. ممنوع تطول في الكلام. "
+                "ردك مصري، جدع، ومختصر جداً جداً. "
                 "لو حد قالك إزيك، رد بكلمة: 'زي الفل يا زميلي'. "
                 "ممنوع تذكر كلمة 'الأرجنتين' في كلامك نهائياً."
             )
@@ -83,6 +79,6 @@ if prompt := st.chat_input("قول يا حب..."):
             st.session_state.messages.append({"role": "assistant", "content": response.text})
             
         except Exception as e:
-            st.error(f"حصلت قفلة: {e}")
-            st.info("نصيحة: لو الموديل مهنج، غير النظام من الجنب لـ 'gemini-pro'.")
-    
+            st.error(f"حصلت قفلة فنية: {e}")
+            st.info("نصيحة: لو الموديل الجديد معلق، قلب من الجنب على 'gemini-pro' المستقر.")
+            
