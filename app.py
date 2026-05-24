@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# --- الربط السري بمفتاح جوجل ---
+# --- الربط السري ---
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
@@ -10,12 +10,12 @@ else:
 
 st.set_page_config(page_title="Khedr-AI", page_icon="🤖")
 
-# --- ستايل لتقريب المسافات وتظبيط الشكل ---
+# --- ستايل تظبيط شكل الزائد (+) جنب الإرسال ---
 st.markdown("""
     <style>
-    .main-title { font-size: 40px; font-weight: bold; text-align: center; color: #00ffcc; margin-top: -30px; }
-    /* تصغير مساحة الرفع عشان متخدش مكان كبير */
-    .stFileUploader { padding: 0px 10px; }
+    .main-title { font-size: 35px; font-weight: bold; text-align: center; color: #00ffcc; }
+    /* تصغير خانة الرفع عشان تبقى شيك */
+    .stFileUploader { margin-bottom: -40px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -24,19 +24,16 @@ if "messages" not in st.session_state:
 
 st.markdown('<p class="main-title">Khedr-AI</p>', unsafe_allow_html=True)
 
-# عرض الرسائل
+# عرض الشات
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- منطقة الإدخال (الزائد + والرفع تحت) ---
-# عملنا حاجة اسمها container عشان الرفع يظهر فوق الكتابة علطول
-input_container = st.container()
-with input_container:
-    # علامة الزائد والرفع هنا بدل الـ Sidebar
-    uploaded_file = st.file_uploader("➕", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
+# --- منطقة الرفع (الزائد) ---
+# خليتها فوق خانة الكتابة مباشرة عشان تبقى قريبة من إيدك
+uploaded_file = st.file_uploader("", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
 
-# شريط الكتابة الأساسي
+# خانة الكتابة
 if prompt := st.chat_input("قول يا حب..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -44,13 +41,13 @@ if prompt := st.chat_input("قول يا حب..."):
 
     with st.chat_message("assistant"):
         try:
-            # استخدام الموديل المستقر
+            # تعليمات خضر الفرفوش
+            instruction = "أنت خضر AI، صاحب الأرجنتيني. فرفوش وبتتكلم مصري وبتقول يا زميلي. لما يقولك عامل إيه قوله الحمد لله يا زميلي."
+            
+            # هنا حلينا الـ 404: بنستخدم الاسم المختصر للموديل
             model = genai.GenerativeModel('gemini-1.5-flash')
             
-            # شخصية خضر الفرفوش
-            sys_msg = "أنت خضر AI، صاحب الأرجنتيني. فرفوش وبتتكلم مصري وبتقول يا زميلي. ردك سريع ومختصر."
-            
-            content = [sys_msg, prompt]
+            content = [instruction, prompt]
             if uploaded_file:
                 img = Image.open(uploaded_file)
                 content.append(img)
@@ -60,13 +57,9 @@ if prompt := st.chat_input("قول يا حب..."):
             st.session_state.messages.append({"role": "assistant", "content": response.text})
             
         except Exception as e:
-            if "404" in str(e):
-                st.error("جوجل بتهزر.. لحظة وبظبطلك الموديل!")
-                model = genai.GenerativeModel('gemini-pro') # حل احتياطي
-            else:
-                st.error(f"حصل قفلة: {e}")
+            st.error(f"حصلت قفلة: {e}")
 
-# زرار مسح الشات خليته في الجنب عشان ميزحمش الدنيا
+# مسح الشات في الجنب
 with st.sidebar:
     if st.button("🗑️ مسح الشات"):
         st.session_state.messages = []
