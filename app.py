@@ -2,36 +2,50 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# --- 1. الربط والمفتاح ---
+# --- 1. الربط بالمفتاح ---
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("⚠️ ناقصك المفتاح في الـ Secrets!")
+    st.error("⚠️ ضيف المفتاح في Secrets")
 
-st.set_page_config(page_title="Khedr-AI", page_icon="🤖", layout="centered")
+st.set_page_config(page_title="Khedr-AI", page_icon="🤖", layout="wide")
 
-# --- 2. ستايل "شات جي بي تي" السري ---
+# --- 2. ستايل الواجهة (تثبيت الكتابة تحت) ---
 st.markdown("""
     <style>
-    /* إخفاء النصوص الزائدة في زر الرفع */
-    .stFileUploader section { padding: 0; min-height: 0; border: none; }
-    .stFileUploader label { display: none; }
-    .stFileUploader [data-testid="stFileUploaderFileName"] { display: none; }
-    
-    /* تظبيط المسافات بين الأعمدة */
-    [data-testid="column"] { display: flex; align-items: flex-end; }
-    .main-title { font-size: 30px; text-align: center; color: #00ffcc; font-weight: bold; margin-bottom: 20px; }
+    .main-title { font-size: 35px; text-align: center; color: #00ffcc; font-weight: bold; margin-bottom: 30px; }
+    /* جعل منطقة الشات تأخذ المساحة المتاحة وتترك الإدخال في الأسفل */
+    .stChatFloatingInputContainer { bottom: 20px; }
     </style>
 """, unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# اختيار المحرك من الجنب (خليته 2.5 كاختيار أول)
+# --- 3. القائمة الجانبية (الرفع + الأنظمة) ---
 with st.sidebar:
-    st.title("⚙️ التحكم")
-    model_id = st.selectbox("النظام:", ["gemini-1.5-flash", "gemini-pro"])
-    if st.button("🗑️ مسح"):
+    st.title("⚙️ إعدادات خضر")
+    
+    # اختيار النظام - ضفنا 2.5 وكل اللي قلبك يحبه
+    model_choice = st.selectbox(
+        "اختار نظام التشغيل:",
+        ["Gemini 2.5 Flash (الأحدث)", "Gemini 1.5 Pro", "Gemini 1.5 Flash", "Gemini Pro"]
+    )
+    
+    model_map = {
+        "Gemini 2.5 Flash (الأحدث)": "gemini-2.5-flash",
+        "Gemini 1.5 Pro": "gemini-1.5-pro",
+        "Gemini 1.5 Flash": "gemini-1.5-flash",
+        "Gemini Pro": "gemini-pro"
+    }
+    selected_model = model_map[model_choice]
+
+    st.write("---")
+    # مكان الرفع الجديد (بعيد عن الوش)
+    st.markdown("### 📤 رفع الملفات")
+    uploaded_file = st.file_uploader("ارفع صورك هنا يا برنس", type=["jpg", "png", "jpeg"])
+    
+    if st.button("🗑️ مسح المحادثة"):
         st.session_state.messages = []
         st.rerun()
 
@@ -42,27 +56,16 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- 3. حركة "الزائد" الاحترافية جنب الإرسال ---
-# بنقسم السطر لعمودين: واحد صغير جداً للزائد والتاني للكتابة
-col1, col2 = st.columns([0.15, 0.85])
-
-with col1:
-    # زر الرفع بقى عبارة عن علامة (+) فقط ومكانه جنب الإرسال
-    uploaded_file = st.file_uploader("➕", type=["jpg", "png", "jpeg"], key="plus_btn")
-
-with col2:
-    prompt = st.chat_input("قول يا حب...")
-
-# --- 4. معالجة الرد ---
-if prompt:
+# --- 4. خانة الكتابة (تحت خالص) ---
+if prompt := st.chat_input("قول يا حب..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         try:
-            model = genai.GenerativeModel(model_id)
-            personality = "أنت 'خضر AI' صاحب الأرجنتيني. فرفوش ومصري. "
+            model = genai.GenerativeModel(selected_model)
+            personality = "أنت 'خضر AI' صاحب الأرجنتيني. فرفوش ومصري وبتقول يا زميلي. "
             
             payload = [personality + prompt]
             if uploaded_file:
@@ -74,5 +77,5 @@ if prompt:
             st.session_state.messages.append({"role": "assistant", "content": response.text})
             
         except Exception as e:
-            st.error(f"حصلت قفلة: {e}")
+            st.error(f"النظام ده معلق: {e}")
     
