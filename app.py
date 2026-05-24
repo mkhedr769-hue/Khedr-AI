@@ -2,72 +2,69 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# --- 1. إعدادات الصفحة والربط السري ---
-# هنا بنسحب المفتاح من Secrets عشان ميتسرقش وجوجل تقفله
+# --- 1. إعدادات المفتاح (Secrets) ---
 try:
     if "GOOGLE_API_KEY" in st.secrets:
-        API_KEY = st.secrets["GOOGLE_API_KEY"]
-        genai.configure(api_key=API_KEY)
+        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     else:
-        st.error("⚠️ المفتاح مش موجود في الخزنة (Secrets)! ضيف GOOGLE_API_KEY هناك.")
+        st.error("⚠️ ضيف المفتاح في الـ Secrets باسم GOOGLE_API_KEY")
 except Exception as e:
-    st.error(f"⚠️ حصلت مشكلة في سحب المفتاح: {e}")
+    st.error(f"⚠️ مشكلة في الربط: {e}")
 
 st.set_page_config(page_title="Khedr-AI", page_icon="🤖", layout="wide")
 
-# صورة أفاتار شيك وفخمة (الـ AI المودرن)
-AI_AVATAR = "https://cdn-icons-png.flaticon.com/512/6298/6298377.png"
-
-# --- 2. ستايل الواجهة والـ CSS ---
+# --- 2. ستايل الواجهة ---
 st.markdown("""
     <style>
-    .stChatMessage { border-radius: 15px; margin-bottom: 10px; border: 1px solid #333; }
-    [data-testid="stChatMessageAvatarCustom"] img {
-        object-fit: contain !important;
-        border-radius: 50% !important;
-        border: 2px solid #00ffcc;
-    }
+    .stChatMessage { border-radius: 15px; margin-bottom: 10px; }
     .main-title {
-        font-size: 60px;
-        font-weight: bold;
-        text-align: center;
-        color: #00ffcc;
-        font-family: 'Arial Black';
-        margin-top: -50px;
+        font-size: 50px; font-weight: bold; text-align: center;
+        color: #00ffcc; font-family: 'Arial'; margin-top: -40px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. الـ Sidebar (الإضافات +) ---
+# --- 3. القائمة الجانبية (+) ---
 with st.sidebar:
-    st.markdown('<p style="font-size: 25px; font-weight: bold; color: #00ffcc;">Khedr Hub</p>', unsafe_allow_html=True)
-    st.write("---")
-    # زرار الـ (+) لرفع الصور والملفات
-    uploaded_file = st.file_uploader("➕ إضافة ملف أو صورة", type=["jpg", "jpeg", "png", "pdf", "txt"])
-    
-    if st.button("🗑️ مسح المحادثة"):
+    st.title("Khedr Hub")
+    uploaded_file = st.file_uploader("➕ ارفع صورة أو ملف", type=["jpg", "png", "jpeg", "txt"])
+    if st.button("🗑️ مسح الشات"):
         st.session_state.messages = []
         st.rerun()
-    st.write("---")
-    st.info("تطوير: Argentiny@khedr")
 
-# --- 4. ذاكرة الشات ---
+# --- 4. ذاكرة المحادثة ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 st.markdown('<p class="main-title">Khedr-AI</p>', unsafe_allow_html=True)
-st.caption("<center>Powering your imagination - By Argentiny@khedr</center>", unsafe_allow_html=True)
 
-# عرض الرسائل القديمة عشان متختفيش
 for msg in st.session_state.messages:
-    avatar = AI_AVATAR if msg["role"] == "assistant" else None
-    with st.chat_message(msg["role"], avatar=avatar):
+    with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- 5. منطقة "خضر الفرفوش" الذكية ---
-if prompt := st.chat_input("Ask Khedr-AI..."):
-    # إضافة رسالة المستخدم
+# --- 5. منطق الرد (خضر الفرفوش) ---
+if prompt := st.chat_input("قول يا حب..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.markdown
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+        try:
+            # الشخصية اللي طلبتها
+            instruction = "أنت خضر AI، صاحب الأرجنتيني. خليك فرفوش ودردش بالعامية المصرية. لو قالك عامل إيه قوله الحمد لله يا زميلي."
+            
+            # الموديل المستقر
+            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=instruction)
+            
+            payload = [prompt]
+            if uploaded_file:
+                img = Image.open(uploaded_file)
+                payload.append(img)
+            
+            response = model.generate_content(payload)
+            st.markdown(response.text)
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
+            
+        except Exception as e:
+            st.error(f"حصلت قفلة: {e}")
         
